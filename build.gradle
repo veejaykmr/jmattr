@@ -1,0 +1,151 @@
+/*
+ *
+ * Copyright (c) 2016. Vijayakumar Mohan
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *   		http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * JMattr - The meta attribute library for java!
+ *
+ */
+group "$project_group"
+version "$project_version"
+
+apply plugin: "java"
+apply plugin: "idea"
+apply plugin: "maven"
+
+
+
+if (!JavaVersion.current().java8Compatible) {
+    throw new IllegalStateException('''A Haiku:
+                                      |  This needs Java 8,
+                                      |  You are using something else,
+                                      |  Refresh. Try again.'''.stripMargin())
+}
+
+
+
+//Added for supporting integration test plugin testsets
+buildscript {
+    repositories {
+        jcenter()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.unbroken-dome.gradle-plugins:gradle-testsets-plugin:$testsets"
+        classpath "ch.raffael.pegdown-doclet:pegdown-doclet:1.2"
+    }
+}
+
+
+subprojects {
+    buildscript {
+        repositories {
+            mavenLocal()
+            jcenter()
+            mavenCentral()
+
+        }
+        dependencies {
+            classpath "org.unbroken-dome.gradle-plugins:gradle-testsets-plugin:$testsets"
+            classpath "ch.raffael.pegdown-doclet:pegdown-doclet:1.2"
+        }
+    }
+    apply plugin: "java"
+    apply plugin: "maven"
+    apply plugin: "idea"
+    apply plugin: "org.unbroken-dome.test-sets"
+    apply plugin: 'ch.raffael.pegdown-doclet'
+
+    /*
+    Vijay : The below block was googled so pasting along with comments
+    contradictory to the comment i was able to make it work without the fork options
+    but leaving it here just in case other javacs have this problem
+    Please dont remove the below commented block. it is required for Debugging purposes if required
+    */
+
+    /*compileJava {
+
+        // I only managed to get this working when I forked
+        // and passed 'javac' as an executable
+
+        //options.compilerArgs << '-Adebug'
+        //options.fork = true
+        //options.forkOptions.executable = 'javac'
+
+    }*/
+
+    compileJava{
+        //Note : Leaving the below option here. Just in case it is required later
+        options.compilerArgs << '-Adebug'
+        options.compilerArgs << '-Averify'
+    }
+
+    group "$project_group"
+    version "$project_version"
+
+
+    test{
+        useTestNG()
+        //scanForTestClasses = false
+        //include "**/*Tests.class"
+    }
+
+
+
+    /*testSets {
+        integrationTest
+    }
+    project.integrationTest {
+        outputs.upToDateWhen { false }
+    }*/
+
+    tasks.withType(Test) {
+        reports.html.destination = file("${reporting.baseDir}/${name}")
+    }
+
+    repositories {
+        mavenLocal()
+        jcenter()
+
+        mavenCentral()
+
+        maven {
+            url = 'http://oss.sonatype.org/content/repositories/snapshots/'
+        }
+    }
+
+    dependencies {
+        compile "com.google.auto.service:auto-service:$autoservice"
+        compile "org.slf4j:slf4j-api:$slf4j_api"
+        compile "org.apache.logging.log4j:log4j-slf4j-impl:$log4j"
+        compile "org.apache.logging.log4j:log4j-api:$log4j"
+        compile "org.apache.logging.log4j:log4j-core:$log4j"
+        compile "com.lmax:disruptor:$disruptor"
+        compile "org.apache.commons:commons-vfs2:$vfs"
+        testCompile "org.testng:testng:$testng"
+    }
+
+}
+repositories {
+    jcenter()
+    mavenCentral()
+
+    maven {
+        url = 'http://oss.sonatype.org/content/repositories/snapshots/'
+    }
+}
+
+dependencies {
+    testCompile "org.testng:testng:$testng"
+}
+
